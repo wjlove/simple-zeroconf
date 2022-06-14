@@ -6,13 +6,15 @@ import argparse
 import logging
 import socket
 import os
-import atexit
+import signal
+import sys
+import time
 from time import sleep
 import json
 import urllib.request
 from urllib.error import HTTPError, URLError
-
 from zeroconf import IPVersion, ServiceInfo, Zeroconf
+
 
 try:
     serviceDescriptionTxt = os.getenv('ZEROCONF_SERVICE_DESCRIPTION', 'No Descrition')
@@ -44,6 +46,13 @@ try:
 except Exception as e:
     supervisorApiKey = "Fail"
     print("Invalid value for BALENA_SUPERVISOR_ADDRESS_API_KEY, using default")
+
+def exitGracefully(cleanUpInfo):
+    print()
+    print("Unregistering service.... ")
+    zeroconf.unregister_service(cleanUpInfo)
+    zeroconf.close()
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
@@ -98,22 +107,25 @@ if __name__ == '__main__':
         server=hostName + ".local.",
     )
 
-    def exitGracefully(cleanUpInfo):
-        print("Unregistering service...")
-        zeroconf.unregister_service(cleanUpInfo)
-        zeroconf.close()
-
     zeroconf = Zeroconf(ip_version=ip_version)
     print("Registration of", serviceType, "service complete")
     zeroconf.register_service(info)
+
+    # Catch SIGTERM and cleanup if we are restarted by the supervisor
+    def sigterm_handler(signal, frame):
+        print()
+        print('Caught SIGTEM!  Cleanup and unregister service...')
+        zeroconf.unregister_service(info)
+        zeroconf.close()
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, sigterm_handler)
 
     # We really just need to sleep forever, this code left in place for testing.
     try:
         while True:
             sleep(0.1)
     except KeyboardInterrupt:
-        pass
-    except SystemExit:
         pass
     finally:
         # print("Unregistering...")
