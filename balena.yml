@@ -1,0 +1,23 @@
+name: balena-zeroconf
+type: sw.application
+description: >-
+  balena-zeroconf is fork of pyzeroconf, Multicast DNS Service Discovery for Python that has been modified to advertise a single DNS-SD service via a balena block
+assets:
+  repository:
+    type: blob.asset
+    data:
+      url: 'https://github.com/wjlove/balena-zeroconf'
+  logo:
+    type: blob.asset
+    data:
+      url: 'https://github.com/wjlove/balena-zeroconf/blob/main/logo.png?raw=true'
+data:
+  defaultDeviceType: raspberrypi3
+  supportedDeviceTypes:
+    - raspberrypi4-64
+    - fincm3
+    - raspberrypi3
+    - raspberrypi3-64
+    - raspberrypi400-64
+    
+version: 1.0.0
